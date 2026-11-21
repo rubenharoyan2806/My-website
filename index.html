@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bella Italia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== COLORS (the Italian flag + warm tones) ===== */
+    :root {
+      --green: #008c45;
+      --white: #fdfaf4;
+      --red:   #cd212a;
+      --ink:   #2b2118;
+      --sand:  #f3e7d3;
+      --terracotta: #c8643b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--white);
+      color: var(--ink);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: "Playfair Display", serif; }
+
+    /* ===== Thin flag-colored bar at the top that fills as you scroll ===== */
+    #progress {
+      position: fixed; top: 0; left: 0; height: 5px; width: 0%;
+      background: linear-gradient(90deg, var(--green) 0 33%, #fff 33% 66%, var(--red) 66%);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+      z-index: 100;
+    }
+
+    /* ===== Top menu ===== */
+    nav {
+      position: fixed; top: 5px; left: 0; right: 0; z-index: 90;
+      display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+      padding: 14px 16px;
+      transition: background .4s, box-shadow .4s;
+    }
+    nav a { color: #fff; text-decoration: none; font-weight: 600; font-size: .95rem; }
+    nav.solid { background: rgba(253,250,244,.95); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    nav.solid a { color: var(--ink); }
+    nav a:hover { color: var(--red); }
+
+    /* ===== Big opening screen ===== */
+    .hero {
+      height: 100vh; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      background: linear-gradient(180deg, #f7a35c 0%, #e86f4c 45%, #7a3b5c 100%);
+      color: #fff;
+    }
+    /* sun */
+    .sun {
+      position: absolute; width: 260px; height: 260px; border-radius: 50%;
+      background: radial-gradient(circle, #ffe9a8, #ffc15e 60%, transparent 70%);
+      top: 18%; left: 50%; transform: translateX(-50%);
+    }
+    /* layered hills that move at different speeds (parallax) */
+    .hill { position: absolute; left: -10%; width: 120%; bottom: 0; }
+    .hill svg { width: 100%; height: auto; display: block; }
+    .hero-text { position: relative; z-index: 5; padding: 0 16px; }
+    .hero h1 {
+      font-size: clamp(3rem, 12vw, 8rem); line-height: 1;
+      text-shadow: 0 4px 30px rgba(0,0,0,.25);
+      animation: rise 1.4s ease-out both;
+    }
+    .hero p {
+      font-size: clamp(1rem, 3vw, 1.4rem); margin-top: 12px;
+      animation: rise 1.4s .3s ease-out both;
+    }
+    .scroll-hint {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      z-index: 6; color: #fff; font-size: .85rem; letter-spacing: 2px; text-align: center;
+    }
+    .scroll-hint span { display: block; font-size: 1.6rem; animation: bounce 1.6s infinite; }
+    @keyframes rise   { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+    @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+
+    /* ===== Normal sections ===== */
+    section { padding: 110px 16px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .title { text-align: center; margin-bottom: 56px; }
+    .title h2 { font-size: clamp(2rem, 6vw, 3.2rem); }
+    .title p { color: #6b5a4a; max-width: 600px; margin: 10px auto 0; }
+    .flag-line { width: 90px; height: 5px; margin: 16px auto 0; border-radius: 3px;
+      background: linear-gradient(90deg, var(--green) 0 33%, #ddd 33% 66%, var(--red) 66%); }
+
+    /* ===== Things that appear when you scroll to them ===== */
+    .reveal       { opacity: 0; transform: translateY(60px); transition: opacity .9s ease, transform .9s ease; }
+    .reveal.left  { transform: translateX(-80px); }
+    .reveal.right { transform: translateX(80px); }
+    .reveal.zoom  { transform: scale(.8); }
+    .reveal.show  { opacity: 1; transform: none; }
+
+    /* ===== Fun facts with counting numbers ===== */
+    .facts { background: var(--sand); }
+    .fact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .fact {
+      background: #fff; border-radius: 18px; padding: 30px 20px; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    }
+    .fact .num { font-family: "Playfair Display", serif; font-size: 2.8rem; color: var(--red); }
+    .fact .label { color: #6b5a4a; }
+
+    /* ===== Cities ===== */
+    .city {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+      margin-bottom: 90px;
+    }
+    .city:nth-child(even) .pic { order: 2; }
+    .pic {
+      aspect-ratio: 4/3; border-radius: 22px; display: flex; align-items: center; justify-content: center;
+      font-size: 7rem; box-shadow: 0 20px 40px rgba(0,0,0,.15);
+    }
+    .rome     { background: linear-gradient(135deg, #e9b872, #c8643b); }
+    .venice   { background: linear-gradient(135deg, #7fc8d8, #2c6e8f); }
+    .florence { background: linear-gradient(135deg, #f4c27a, #b5523b); }
+    .amalfi   { background: linear-gradient(135deg, #8fd3c7, #3a8fb7); }
+    .city h3 { font-size: 2.2rem; margin-bottom: 10px; }
+    .city .tag { color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: .8rem; }
+
+    /* ===== Food cards ===== */
+    .food { background: var(--green); color: #fff; }
+    .food .title p { color: #d9f0e3; }
+    .food .flag-line { background: #fff; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .card {
+      background: #fff; color: var(--ink); border-radius: 18px; padding: 30px 24px; text-align: center;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .card:hover { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 16px 30px rgba(0,0,0,.2); }
+    .card .emoji { font-size: 3.5rem; }
+    .card h3 { margin: 10px 0 6px; }
+
+    /* ===== Big quote with sliding words ===== */
+    .quote { background: var(--ink); color: var(--sand); text-align: center; overflow: hidden; }
+    .quote h2 { font-size: clamp(2rem, 7vw, 4.5rem); white-space: nowrap; }
+    .quote .slide-a, .quote .slide-b { display: block; will-change: transform; }
+    .quote .slide-b { color: var(--terracotta); font-style: italic; }
+
+    /* ===== Timeline ===== */
+    .timeline { position: relative; max-width: 700px; margin: 0 auto; }
+    .timeline::before {
+      content: ""; position: absolute; left: 18px; top: 0; bottom: 0; width: 3px; background: var(--sand);
+    }
+    #timeline-fill {
+      position: absolute; left: 18px; top: 0; width: 3px; height: 0; background: var(--red);
+    }
+    .step { position: relative; padding: 0 0 44px 60px; }
+    .step::before {
+      content: ""; position: absolute; left: 10px; top: 6px; width: 19px; height: 19px; border-radius: 50%;
+      background: #fff; border: 3px solid var(--red);
+    }
+    .step .year { font-weight: 600; color: var(--red); }
+    .step h3 { font-size: 1.4rem; }
+
+    /* ===== Footer ===== */
+    footer {
+      background: linear-gradient(90deg, var(--green) 0 33.3%, var(--white) 33.3% 66.6%, var(--red) 66.6%);
+      padding: 70px 16px; text-align: center;
+    }
+    footer .box { display: inline-block; background: #fff; padding: 26px 34px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+    footer h2 { font-size: 2.2rem; }
+
+    /* ===== Phones ===== */
+    @media (max-width: 760px) {
+      .city { grid-template-columns: 1fr; gap: 24px; }
+      .city:nth-child(even) .pic { order: 0; }
+      .pic { font-size: 5rem; }
+      nav { gap: 14px; }
+      nav a { font-size: .85rem; }
+    }
+
+    /* For people who prefer less motion: show everything right away */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      * { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="progress"></div>
+
+  <nav id="nav">
+    <a href="#facts">Facts</a>
+    <a href="#cities">Cities</a>
+    <a href="#food">Food</a>
+    <a href="#history">History</a>
+  </nav>
+
+  <!-- ===== OPENING SCREEN ===== -->
+  <header class="hero">
+    <div class="sun" data-speed="0.5"></div>
+
+    <div class="hill" data-speed="0.35">
+      <svg viewBox="0 0 1440 320"><path fill="#a35a5f" d="M0,200 C240,120 480,240 720,170 C960,100 1200,200 1440,150 L1440,320 L0,320 Z"/></svg>
+    </div>
+    <div class="hill" data-speed="0.2">
+      <svg viewBox="0 0 1440 320"><path fill="#6b8f4e" d="M0,240 C300,170 520,280 820,220 C1080,170 1260,260 1440,230 L1440,320 L0,320 Z"/></svg>
+    </div>
+    <div class="hill" data-speed="0.08">
+      <svg viewBox="0 0 1440 320"><path fill="#3f6b3a" d="M0,280 C260,240 560,310 860,270 C1120,240 1300,300 1440,280 L1440,320 L0,320 Z"/></svg>
+    </div>
+
+    <div class="hero-text" data-speed="-0.3">
+      <h1>Italia</h1>
+      <p>Sun, history, art &amp; the best food in the world</p>
+    </div>
+
+    <div class="scroll-hint">SCROLL<span>↓</span></div>
+  </header>
+
+  <!-- ===== FUN FACTS ===== -->
+  <section class="facts" id="facts">
+    <div class="wrap">
+      <div class="title reveal">
+        <h2>Italy in Numbers</h2>
+        <div class="flag-line"></div>
+      </div>
+      <div class="fact-grid">
+        <div class="fact reveal zoom"><div class="num" data-count="20">0</div><div class="label">Regions</div></div>
+        <div class="fact reveal zoom"><div class="num" data-count="60">0</div><div class="label">UNESCO World Heritage Sites</div></div>
+        <div class="fact reveal zoom"><div class="num" data-count="7600">0</div><div class="label">km of coastline</div></div>
+        <div class="fact reveal zoom"><div class="num" data-count="350">0</div><div class="label">shapes of pasta</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CITIES ===== -->
+  <section id="cities">
+    <div class="wrap">
+      <div class="title reveal">
+        <h2>Beautiful Places</h2>
+        <div class="flag-line"></div>
+        <p>Every corner of Italy has its own story.</p>
+      </div>
+
+      <div class="cities">
+        <div class="city">
+          <div class="pic rome reveal left">🏛️</div>
+          <div class="reveal right">
+            <div class="tag">The Eternal City</div>
+            <h3>Rome</h3>
+            <p>The capital of Italy and once the heart of a huge empire. Walk past the Colosseum, toss a coin into the Trevi Fountain, and visit Vatican City, the smallest country in the world.</p>
+          </div>
+        </div>
+
+        <div class="city">
+          <div class="pic venice reveal right">🛶</div>
+          <div class="reveal left">
+            <div class="tag">The Floating City</div>
+            <h3>Venice</h3>
+            <p>A city built on more than 100 small islands, with canals instead of streets. People get around by boat, and the famous gondolas glide under old stone bridges.</p>
+          </div>
+        </div>
+
+        <div class="city">
+          <div class="pic florence reveal left">🎨</div>
+          <div class="reveal right">
+            <div class="tag">Birthplace of the Renaissance</div>
+            <h3>Florence</h3>
+            <p>Home of great artists like Michelangelo and Leonardo da Vinci. See the statue of David and the giant red dome of the cathedral that rises over the city.</p>
+          </div>
+        </div>
+
+        <div class="city">
+          <div class="pic amalfi reveal right">🍋</div>
+          <div class="reveal left">
+            <div class="tag">Sea &amp; Lemons</div>
+            <h3>Amalfi Coast</h3>
+            <p>Colorful villages hang on cliffs above the blue sea. The area is famous for its huge lemons and for limoncello, a sweet lemon drink.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUOTE (words slide when you scroll) ===== -->
+  <section class="quote">
+    <h2>
+      <span class="slide-a">La dolce vita</span>
+      <span class="slide-b">“the sweet life”</span>
+    </h2>
+  </section>
+
+  <!-- ===== FOOD ===== -->
+  <section class="food" id="food">
+    <div class="wrap">
+      <div class="title reveal">
+        <h2>Buon Appetito!</h2>
+        <div class="flag-line"></div>
+        <p>Italian food is simple, fresh and loved everywhere.</p>
+      </div>
+      <div class="cards">
+        <div class="card reveal"><div class="emoji">🍕</div><h3>Pizza</h3><p>Born in Naples. The classic Margherita has the colors of the flag.</p></div>
+        <div class="card reveal"><div class="emoji">🍝</div><h3>Pasta</h3><p>Spaghetti, penne, ravioli… every region has its favorite.</p></div>
+        <div class="card reveal"><div class="emoji">🍨</div><h3>Gelato</h3><p>Italian ice cream: creamier, softer and full of flavor.</p></div>
+        <div class="card reveal"><div class="emoji">☕</div><h3>Espresso</h3><p>A tiny, strong coffee, usually drunk standing at the bar.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HISTORY TIMELINE ===== -->
+  <section id="history">
+    <div class="wrap">
+      <div class="title reveal">
+        <h2>A Short History</h2>
+        <div class="flag-line"></div>
+      </div>
+      <div class="timeline" id="timeline">
+        <div id="timeline-fill"></div>
+        <div class="step reveal left"><div class="year">753 BC</div><h3>Rome is founded</h3><p>Legend says twin brothers Romulus and Remus started the city.</p></div>
+        <div class="step reveal left"><div class="year">27 BC</div><h3>The Roman Empire</h3><p>Rome grows into an empire that rules much of Europe.</p></div>
+        <div class="step reveal left"><div class="year">1400s</div><h3>The Renaissance</h3><p>A golden age of art and science begins in Florence.</p></div>
+        <div class="step reveal left"><div class="year">1861</div><h3>Italy unites</h3><p>Many small states join together to become one country.</p></div>
+        <div class="step reveal left"><div class="year">1946</div><h3>A Republic</h3><p>Italians vote to become the republic it is today.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="box reveal zoom">
+      <h2>Arrivederci! 👋</h2>
+      <p>See you soon in Italy.</p>
+    </div>
+  </footer>
+
+  <script>
+    // 1) Make things fade/slide in when they come onto the screen
+    const watcher = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+          const num = entry.target.querySelector('[data-count]');
+          if (num) countUp(num);
+          watcher.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    // small delay between items in the same row so they pop in one by one
+    document.querySelectorAll('.fact-grid, .cards, .timeline').forEach((group) => {
+      group.querySelectorAll('.reveal').forEach((el, i) => {
+        el.style.transitionDelay = (i * 0.15) + 's';
+      });
+    });
+    document.querySelectorAll('.reveal').forEach((el) => watcher.observe(el));
+
+    // 2) Numbers that count up from 0
+    function countUp(el) {
+      const target = +el.dataset.count;
+      const start = performance.now();
+      const duration = 1800;
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(eased * target).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // 3) Everything that reacts to the scroll position
+    const progress = document.getElementById('progress');
+    const nav = document.getElementById('nav');
+    const layers = document.querySelectorAll('[data-speed]');
+    const quote = document.querySelector('.quote');
+    const slideA = document.querySelector('.slide-a');
+    const slideB = document.querySelector('.slide-b');
+    const timeline = document.getElementById('timeline');
+    const timelineFill = document.getElementById('timeline-fill');
+
+    function onScroll() {
+      const y = window.scrollY;
+      const h = window.innerHeight;
+
+      // progress bar at the top
+      const max = document.documentElement.scrollHeight - h;
+      progress.style.width = (y / max * 100) + '%';
+
+      // menu gets a background after leaving the first screen
+      nav.classList.toggle('solid', y > h * 0.8);
+
+      // parallax: hills, sun and title move at different speeds
+      if (y < h) {
+        layers.forEach((l) => {
+          const extra = l.classList.contains('sun') ? 'translateX(-50%) ' : '';
+          l.style.transform = extra + 'translateY(' + (y * l.dataset.speed) + 'px)';
+        });
+      }
+
+      // quote words slide in opposite directions
+      const qr = quote.getBoundingClientRect();
+      const qp = (h - qr.top) / (h + qr.height); // 0 → 1 while passing
+      if (qp > 0 && qp < 1) {
+        slideA.style.transform = 'translateX(' + ((0.5 - qp) * 60) + '%)';
+        slideB.style.transform = 'translateX(' + ((qp - 0.5) * 60) + '%)';
+      }
+
+      // red line in the timeline grows as you scroll
+      const tr = timeline.getBoundingClientRect();
+      const tp = Math.min(Math.max((h * 0.7 - tr.top) / tr.height, 0), 1);
+      timelineFill.style.height = (tp * 100) + '%';
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  </script>
+</body>
+</html>
